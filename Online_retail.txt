@@ -1,0 +1,81 @@
+create database Sale;
+
+use Sales;
+
+Create table Online_reatail (
+ID INT AUTO_INCREMENT PRIMARY KEY,
+InvoiceNo  int,
+StockCode Varchar(50),
+Description	text,
+Quantity int,	
+InvoiceDate datetime,	
+UnitPrice decimal(10,2),
+CustomerID int,
+Country varchar(50)
+);
+
+select * from online_retail;
+ 
+-- Remove Duplicate R
+SET SQL_SAFE_UPDATES = 0;
+delete from online_retail
+where InvoiceNo is null
+or StockCode is null
+or Description	is null
+or Quantity is null	
+or InvoiceDate is null	
+or UnitPrice is null
+or CustomerID is null	
+or Country is null;
+SET SQL_SAFE_UPDATES = 1;
+ 
+--Remove Rows with 0 price.
+SET SQL_SAFE_UPDATES = 0;
+delete FROM online_retail
+where Quantity <= 0 OR UnitPrice <= 0;
+SET SQL_SAFE_UPDATES = 1;
+
+-- Remove unwanted space
+SET SQL_SAFE_UPDATES = 0;
+update online_retail
+set Description = trim(description);
+SET SQL_SAFE_UPDATES = 1;
+
+--update United kingdom as UK
+SET SQL_SAFE_UPDATES = 0;
+update online_retail
+set country = "U.K"
+where country in ("United Kingdom");
+SET SQL_SAFE_UPDATES = 1;
+
+--Calculate Total Revenue per Country
+select country,
+round(sum(Quantity*UnitPrice),2) as totalrevenue from online_retail
+where Quantity > 0 and UnitPrice > 0
+group by Country
+order by totalrevenue desc;
+
+--the most frequently purchased products
+select Description,
+sum(Quantity) as totalQuanity from online_retail
+where Quantity > 0
+group by Description
+order by totalQuanity desc;
+
+--monthly sales trends
+select date_format(InvoiceDate, '%Y-%M') as month,
+ROUND(SUM(Quantity * UnitPrice), 2) AS MonthRevenue
+from online_retail
+where Quantity >  0 and UnitPrice >0
+group by date_format(InvoiceDate, '%Y-%M')
+order by month desc;
+
+-- Segment Customers Based on Purchasing Behavior
+SELECT CustomerID,
+ROUND(SUM(Quantity * UnitPrice), 2) AS TotalSpent,
+COUNT(DISTINCT InvoiceNo) AS TotalOrders,
+SUM(Quantity) AS TotalQuantity
+from online_retail
+where  CustomerID is NOT NULL >  0 and UnitPrice >0
+group by CustomerID
+order by TotalQuantity desc;
